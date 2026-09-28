@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+{% block title %}Dev Panel — Movie Manager{% endblock %}
+
+{% block content %}
+<div class="page-container" style="max-width:1100px;">
+
+  <h2 class="page-title">🛠️ Dev Panel</h2>
+  <p class="page-subtitle">Manage movies — add, edit, delete & view change history</p>
+
+  {% if msg %}
+  <div class="alert {{ 'alert-success' if msg_type != 'error' else 'alert-error' }}">{{ msg }}</div>
+  {% endif %}
+
+  <div class="dev-grid">
+
+    <!-- ── ADD MOVIE ── -->
+    <div class="dev-card">
+      <div class="dev-card-title">➕ Add New Movie</div>
+      <form method="POST" action="/dev/add">
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" name="title" placeholder="e.g. Inception" required>
+        </div>
+        <div class="form-group">
+          <label>Genres <span style="color:var(--text3);font-weight:400;">(pipe separated)</span></label>
+          <input type="text" name="genres" placeholder="e.g. Action|Sci-Fi|Thriller">
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%;">Add Movie</button>
+      </form>
+    </div>
+
+    <!-- ── EDIT / DELETE MOVIE ── -->
+    <div class="dev-card">
+      <div class="dev-card-title">✏️ Edit / Delete Movie</div>
+      <form method="POST" action="/dev/edit" id="editForm">
+        <div class="form-group">
+          <label>Movie ID</label>
+          <input type="number" name="movie_id" id="editId" placeholder="Enter movie ID" required>
+        </div>
+        <div class="form-group">
+          <label>New Title</label>
+          <input type="text" name="title" id="editTitle" placeholder="Updated title" required>
+        </div>
+        <div class="form-group">
+          <label>New Genres</label>
+          <input type="text" name="genres" id="editGenres" placeholder="Action|Drama">
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button type="submit" class="btn-primary" style="flex:1;">Update</button>
+          <button type="button" class="btn-delete" onclick="deleteMovie()">Delete</button>
+        </div>
+      </form>
+      <form method="POST" action="/dev/delete" id="deleteForm" style="display:none;">
+        <input type="hidden" name="movie_id" id="deleteId">
+      </form>
+    </div>
+
+  </div>
+
+  <!-- ── RECENT MOVIES TABLE ── -->
+  <div class="dev-section">
+    <div class="dev-section-title">🎬 Recent Movies (last 50)</div>
+    <div class="dev-table-wrap">
+      <table class="dev-table">
+        <thead>
+          <tr><th>ID</th><th>Title</th><th>Genres</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+          {% for m in movies %}
+          <tr class="movie-row" data-id="{{ m.movie_id }}" data-title="{{ m.title }}" data-genres="{{ m.genres }}">
+            <td class="mono">#{{ m.movie_id }}</td>
+            <td>{{ m.title }}</td>
+            <td>
+              {% for g in m.genres.split('|') %}
+                <span class="genre-tag">{{ g }}</span>
+              {% endfor %}
+            </td>
+            <td>
+              <button class="btn-edit-row" onclick="fillEdit({{ m.movie_id }}, {{ m.title | tojson }}, {{ m.genres | tojson }})">
+                Edit
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── CHANGE HISTORY ── -->
+  <div class="dev-section">
+    <div class="dev-section-title">📋 Change History</div>
+    {% if not history %}
+    <p style="color:var(--text3);font-size:0.88rem;">No changes yet.</p>
+    {% else %}
+    <div class="dev-table-wrap">
+      <table class="dev-table">
+        <thead>
+          <tr><th>Time</th><th>Action</th><th>Movie ID</th><th>Title</th><th>Genres</th><th>By</th></tr>
+        </thead>
+        <tbody>
+          {% for h in history %}
+          <tr>
+            <td class="mono" style="white-space:nowrap;">{{ h.changed_at }}</td>
+            <td>
+              <span class="action-badge action-{{ h.action.lower() }}">{{ h.action }}</span>
+            </td>
+            <td class="mono">#{{ h.movie_id }}</td>
+            <td>{{ h.title }}</td>
+            <td style="font-size:0.78rem;color:var(--text3);">{{ h.genres }}</td>
+            <td style="color:var(--text3);">{{ h.changed_by }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<style>
+.dev-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+@media(max-width:700px){ .dev-grid { grid-template-columns: 1fr; } }
+
+.dev-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+.dev-card-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text2);
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.dev-section {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+.dev-section-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text2);
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.dev-table-wrap { overflow-x: auto; }
+.dev-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.83rem;
+}
+.dev-table th {
+  text-align: left;
+  padding: 10px 12px;
+  color: var(--text3);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.dev-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text2);
+  vertical-align: middle;
+}
+.dev-table tr:last-child td { border-bottom: none; }
+.dev-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+.mono { font-family: monospace; color: var(--text3); }
+
+.btn-edit-row {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  padding: 4px 12px;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-edit-row:hover { border-color: var(--red); color: var(--red); }
+
+.btn-delete {
+  flex: 1;
+  padding: 14px;
+  background: transparent;
+  color: #f85149;
+  border: 1px solid #f85149;
+  border-radius: var(--radius);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-delete:hover { background: rgba(248,81,73,0.1); }
+
+.action-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.action-added       { background: rgba(0,255,136,0.1);  color: #00ff88; border: 1px solid rgba(0,255,136,0.3); }
+.action-edited      { background: rgba(0,180,255,0.1);  color: #00b4ff; border: 1px solid rgba(0,180,255,0.3); }
+.action-deleted     { background: rgba(248,81,73,0.1);  color: #f85149; border: 1px solid rgba(248,81,73,0.3); }
+.action-before_edit { background: rgba(255,180,0,0.1);  color: #ffb400; border: 1px solid rgba(255,180,0,0.3); }
+</style>
+
+<script>
+function fillEdit(id, title, genres) {
+  document.getElementById('editId').value     = id;
+  document.getElementById('editTitle').value  = title;
+  document.getElementById('editGenres').value = genres;
+  document.getElementById('editForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  document.getElementById('editId').focus();
+}
+
+function deleteMovie() {
+  const id = document.getElementById('editId').value;
+  const title = document.getElementById('editTitle').value;
+  if (!id) { alert('Please enter or select a Movie ID first.'); return; }
+  if (!confirm(`Delete "${title || 'Movie #' + id}"? This cannot be undone.`)) return;
+  document.getElementById('deleteId').value = id;
+  document.getElementById('deleteForm').submit();
+}
+</script>
+{% endblock %}

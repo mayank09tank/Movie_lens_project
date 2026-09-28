@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Chat History{% endblock %}
+
+{% block content %}
+<div class="page-container">
+
+  <h2 class="page-title">📜 Prompt History</h2>
+  <p class="page-subtitle">
+    <a href="/chat">← Back to Chat</a>
+  </p>
+
+  {% if not history %}
+  <p style="color:var(--text3);">No history yet. Ask something first!</p>
+  {% endif %}
+
+  {% for item in history %}
+  <div class="history-item">
+    <div class="history-time">🕐 {{ item.created_at }}</div>
+
+    <div class="history-q-label">Q</div>
+    <div class="history-q">{{ item.question }}</div>
+
+    <div class="history-a-label">A</div>
+    <div class="history-a">{{ item.answer }}</div>
+
+    {% if item.sources and item.sources != "[]" %}
+    <div class="history-sources">📎 Sources: {{ item.sources }}</div>
+    {% endif %}
+  </div>
+  {% endfor %}
+
+</div>
+{% endblock %}

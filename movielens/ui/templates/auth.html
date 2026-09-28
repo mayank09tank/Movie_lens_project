@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MovieLens — Login</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #11111b;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .container {
+    background: #1e1e2e;
+    border: 1px solid #313244;
+    border-radius: 16px;
+    width: 420px;
+    padding: 40px;
+    box-shadow: 0 20px 60px #00000066;
+  }
+  .logo { text-align: center; margin-bottom: 28px; }
+  .logo-icon {
+    width: 52px; height: 52px;
+    background: linear-gradient(135deg, #89b4fa, #cba6f7);
+    border-radius: 14px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 24px; margin-bottom: 10px;
+  }
+  .logo h2 { color: #cdd6f4; font-size: 22px; }
+  .logo p  { color: #6c7086; font-size: 13px; margin-top: 4px; }
+
+  .tabs {
+    display: flex; background: #313244;
+    border-radius: 10px; padding: 4px; margin-bottom: 28px;
+  }
+  .tab {
+    flex: 1; text-align: center; padding: 9px;
+    border-radius: 8px; cursor: pointer;
+    font-size: 14px; font-weight: 600;
+    color: #6c7086; transition: all .2s;
+  }
+  .tab.active { background: #89b4fa; color: #1e1e2e; }
+
+  .form { display: none; }
+  .form.active { display: block; }
+
+  .form-group { margin-bottom: 18px; }
+  .form-group label { display: block; font-size: 13px; color: #a6adc8; margin-bottom: 6px; font-weight: 500; }
+  .input-wrap { position: relative; }
+  .input-wrap span { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 16px; }
+  .input-wrap input {
+    width: 100%; padding: 11px 14px 11px 40px;
+    background: #313244; border: 1px solid #45475a;
+    border-radius: 8px; color: #cdd6f4; font-size: 14px; transition: border .2s;
+  }
+  .input-wrap input:focus { outline: none; border-color: #89b4fa; background: #3b3d52; }
+  .input-wrap input::placeholder { color: #585b70; }
+  .eye-btn {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; font-size: 16px; color: #6c7086;
+  }
+  .row-between { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
+  .remember { display: flex; align-items: center; gap: 7px; font-size: 13px; color: #a6adc8; cursor: pointer; }
+  .remember input[type=checkbox] { accent-color: #89b4fa; width: 15px; height: 15px; }
+  .forgot { font-size: 13px; color: #89b4fa; text-decoration: none; }
+  .btn-submit {
+    width: 100%; padding: 12px;
+    background: linear-gradient(135deg, #89b4fa, #cba6f7);
+    border: none; border-radius: 8px;
+    color: #1e1e2e; font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: opacity .2s;
+  }
+  .btn-submit:hover { opacity: .88; }
+  .btn-submit:disabled { opacity: .5; cursor: not-allowed; }
+  .divider { display: flex; align-items: center; gap: 12px; margin: 22px 0; color: #45475a; font-size: 13px; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #313244; }
+  .strength-bar { display: flex; gap: 4px; margin-top: 8px; }
+  .strength-bar span { flex: 1; height: 3px; border-radius: 2px; background: #313244; transition: background .3s; }
+  .strength-label { font-size: 11px; color: #6c7086; margin-top: 4px; }
+  .msg { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: none; }
+  .msg.error   { background: #f38ba822; color: #f38ba8; border: 1px solid #f38ba844; }
+  .msg.success { background: #a6e3a122; color: #a6e3a1; border: 1px solid #a6e3a144; }
+  .terms { font-size: 12px; color: #6c7086; text-align: center; margin-top: 18px; line-height: 1.6; }
+  .terms a { color: #89b4fa; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">
+    <div class="logo-icon">🎬</div>
+    <h2>MovieLens DB</h2>
+    <p>PostgreSQL Project Dashboard</p>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('login')">Login</div>
+    <div class="tab" onclick="switchTab('signup')">Sign Up</div>
+  </div>
+
+  <div class="msg" id="msg"></div>
+
+  <div class="form active" id="loginForm">
+    <div class="form-group">
+      <label>Email Address</label>
+      <div class="input-wrap">
+        <span>📧</span>
+        <input type="email" id="loginEmail" placeholder="you@example.com">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <div class="input-wrap">
+        <span>🔒</span>
+        <input type="password" id="loginPass" placeholder="Enter your password">
+        <button class="eye-btn" onclick="togglePass('loginPass', this)">👁️</button>
+      </div>
+    </div>
+    <div class="row-between">
+      <label class="remember"><input type="checkbox"> Remember me</label>
+      <a href="#" class="forgot">Forgot password?</a>
+    </div>
+    <button class="btn-submit" id="loginBtn" onclick="handleLogin()">Login →</button>
+  </div>
+
+  <div class="form" id="signupForm">
+    <div class="form-group">
+      <label>Full Name</label>
+      <div class="input-wrap">
+        <span>👤</span>
+        <input type="text" id="signupName" placeholder="Your full name">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Email Address</label>
+      <div class="input-wrap">
+        <span>📧</span>
+        <input type="email" id="signupEmail" placeholder="you@example.com">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <div class="input-wrap">
+        <span>🔒</span>
+        <input type="password" id="signupPass" placeholder="Create a password" oninput="checkStrength(this.value)">
+        <button class="eye-btn" onclick="togglePass('signupPass', this)">👁️</button>
+      </div>
+      <div class="strength-bar">
+        <span id="b1"></span><span id="b2"></span><span id="b3"></span><span id="b4"></span>
+      </div>
+      <div class="strength-label" id="strengthLabel"></div>
+    </div>
+    <div class="form-group">
+      <label>Confirm Password</label>
+      <div class="input-wrap">
+        <span>🔒</span>
+        <input type="password" id="signupConfirm" placeholder="Repeat your password">
+        <button class="eye-btn" onclick="togglePass('signupConfirm', this)">👁️</button>
+      </div>
+    </div>
+    <button class="btn-submit" id="signupBtn" onclick="handleSignup()">Create Account →</button>
+    <div class="terms">
+      By signing up, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach((t, i) =>
+      t.classList.toggle('active', (i === 0) === (tab === 'login')));
+    document.getElementById('loginForm').classList.toggle('active', tab === 'login');
+    document.getElementById('signupForm').classList.toggle('active', tab === 'signup');
+    hideMsg();
+  }
+
+  function togglePass(id, btn) {
+    const inp = document.getElementById(id);
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    btn.textContent = inp.type === 'password' ? '👁️' : '🙈';
+  }
+
+  function showMsg(text, type) {
+    const el = document.getElementById('msg');
+    el.textContent = text;
+    el.className = 'msg ' + type;
+    el.style.display = 'block';
+  }
+  function hideMsg() { document.getElementById('msg').style.display = 'none'; }
+
+  function checkStrength(val) {
+    const bars = ['b1','b2','b3','b4'].map(id => document.getElementById(id));
+    const label = document.getElementById('strengthLabel');
+    let score = 0;
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const colors = ['#f38ba8','#fab387','#f9e2af','#a6e3a1'];
+    const labels = ['Weak','Fair','Good','Strong'];
+    bars.forEach((b, i) => b.style.background = i < score ? colors[score-1] : '#313244');
+    label.textContent = val.length ? labels[score-1] || '' : '';
+    label.style.color = score > 0 ? colors[score-1] : '#6c7086';
+  }
+
+  async function handleLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass  = document.getElementById('loginPass').value;
+    if (!email || !pass) return showMsg('Please fill in all fields.', 'error');
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true; btn.textContent = 'Logging in...';
+    try {
+      const res  = await fetch('/api/auth/login', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ email, password: pass })
+      });
+      const data = await res.json();
+      if (!res.ok) { showMsg(data.error, 'error'); return; }
+      showMsg('✅ ' + data.message, 'success');
+      setTimeout(() => window.location.href = '/home', 800);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Login →';
+    }
+  }
+
+  async function handleSignup() {
+    const name    = document.getElementById('signupName').value.trim();
+    const email   = document.getElementById('signupEmail').value.trim();
+    const pass    = document.getElementById('signupPass').value;
+    const confirm = document.getElementById('signupConfirm').value;
+    if (!name || !email || !pass || !confirm) return showMsg('Please fill in all fields.', 'error');
+    if (pass.length < 6) return showMsg('Password must be at least 6 characters.', 'error');
+    if (pass !== confirm) return showMsg('Passwords do not match.', 'error');
+    const btn = document.getElementById('signupBtn');
+    btn.disabled = true; btn.textContent = 'Creating account...';
+    try {
+      const res  = await fetch('/api/auth/signup', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ name, email, password: pass })
+      });
+      const data = await res.json();
+      if (!res.ok) { showMsg(data.error, 'error'); return; }
+      showMsg('🎉 ' + data.message + ' Please login.', 'success');
+      setTimeout(() => switchTab('login'), 1500);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Create Account →';
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      if (document.getElementById('loginForm').classList.contains('active')) handleLogin();
+      else handleSignup();
+    }
+  });
+</script>
+</body>
+</html>

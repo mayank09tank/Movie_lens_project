@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Chat — Ask Anything{% endblock %}
+
+{% block content %}
+<div class="page-container">
+
+  <h2 class="page-title">💬 Ask Anything</h2>
+  <p class="page-subtitle">
+    Ask questions from the uploaded knowledge base &nbsp;·&nbsp;
+    <a href="/chat/history">📜 View History</a>
+  </p>
+
+  <form class="chat-form" method="POST" action="/chat">
+    <input class="chat-input" type="text" name="question" value="{{ question }}"
+      placeholder="Ask a question about movies or the knowledge base..." required autocomplete="off">
+    <button type="submit" class="btn-primary">Ask →</button>
+  </form>
+
+  {% if answer is not none %}
+  <div class="answer-box">
+    <div class="answer-label">Answer</div>
+    <div class="answer-text">{{ answer }}</div>
+  </div>
+
+  {% if chunks %}
+  <div class="sources-box">
+    <div class="sources-label">📚 Source Chunks</div>
+    {% for chunk in chunks %}
+    <div class="chunk">
+      {{ chunk[:300] }}{% if chunk|length > 300 %}…{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endif %}
+
+</div>
+{% endblock %}

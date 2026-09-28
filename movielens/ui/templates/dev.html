@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MovieLens — Dev Panel</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #11111b; color: #cdd6f4; min-height: 100vh; }
+
+  nav {
+    background: #1e1e2e; border-bottom: 1px solid #313244;
+    padding: 14px 32px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand { font-size: 18px; font-weight: 700; color: #cba6f7; }
+  .nav-right  { display: flex; align-items: center; gap: 14px; }
+  .nav-user   { font-size: 13px; color: #a6adc8; }
+  .nav-user span { color: #cba6f7; font-weight: 600; }
+  .home-link { font-size: 13px; color: #89b4fa; text-decoration: none; padding: 6px 14px; border: 1px solid #89b4fa44; border-radius: 6px; }
+  .logout-btn { background: #f38ba822; color: #f38ba8; border: 1px solid #f38ba844; border-radius: 6px; padding: 6px 14px; font-size: 13px; cursor: pointer; }
+
+  .main { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+  h1 { font-size: 26px; color: #cba6f7; margin-bottom: 6px; }
+  .subtitle { color: #6c7086; font-size: 14px; margin-bottom: 28px; }
+
+  /* Add form */
+  .add-form {
+    background: #1e1e2e; border: 1px solid #313244; border-radius: 12px;
+    padding: 24px; margin-bottom: 28px;
+  }
+  .add-form h3 { font-size: 15px; color: #a6adc8; margin-bottom: 16px; }
+  .form-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .form-row input {
+    flex: 1; min-width: 140px; padding: 10px 14px;
+    background: #313244; border: 1px solid #45475a;
+    border-radius: 8px; color: #cdd6f4; font-size: 14px;
+  }
+  .form-row input:focus { outline: none; border-color: #89b4fa; }
+  .form-row input::placeholder { color: #585b70; }
+  .btn-add {
+    padding: 10px 22px; background: #a6e3a1; color: #1e1e2e;
+    border: none; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer;
+  }
+  .btn-add:hover { opacity: .85; }
+
+  /* Table */
+  .table-wrap { background: #1e1e2e; border: 1px solid #313244; border-radius: 12px; overflow: hidden; }
+  .table-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 20px; border-bottom: 1px solid #313244;
+  }
+  .table-header h3 { font-size: 15px; color: #a6adc8; }
+  .pagination { display: flex; gap: 8px; align-items: center; font-size: 13px; color: #6c7086; }
+  .pagination button {
+    background: #313244; color: #cdd6f4; border: 1px solid #45475a;
+    border-radius: 6px; padding: 5px 12px; cursor: pointer; font-size: 13px;
+  }
+  .pagination button:disabled { opacity: .4; cursor: not-allowed; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #181825; color: #6c7086; font-size: 12px; text-transform: uppercase; padding: 10px 16px; text-align: left; }
+  td { padding: 12px 16px; border-top: 1px solid #313244; font-size: 14px; }
+  tr:hover td { background: #ffffff05; }
+
+  .genre-tag { display: inline-block; background: #313244; color: #89b4fa; border-radius: 4px; padding: 2px 7px; font-size: 11px; margin: 1px; }
+  .btn-edit   { background: #89b4fa22; color: #89b4fa; border: 1px solid #89b4fa44; border-radius: 5px; padding: 4px 10px; font-size: 12px; cursor: pointer; margin-right: 6px; }
+  .btn-delete { background: #f38ba822; color: #f38ba8; border: 1px solid #f38ba844; border-radius: 5px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
+
+  /* Modal */
+  .modal-bg { display: none; position: fixed; inset: 0; background: #00000088; z-index: 100; align-items: center; justify-content: center; }
+  .modal-bg.open { display: flex; }
+  .modal { background: #1e1e2e; border: 1px solid #313244; border-radius: 14px; padding: 32px; width: 420px; }
+  .modal h3 { font-size: 17px; color: #cdd6f4; margin-bottom: 20px; }
+  .modal input { width: 100%; padding: 10px 14px; background: #313244; border: 1px solid #45475a; border-radius: 8px; color: #cdd6f4; font-size: 14px; margin-bottom: 14px; }
+  .modal input:focus { outline: none; border-color: #89b4fa; }
+  .modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+  .btn-save   { background: #89b4fa; color: #1e1e2e; border: none; border-radius: 7px; padding: 9px 20px; font-weight: 700; cursor: pointer; }
+  .btn-cancel { background: #313244; color: #cdd6f4; border: none; border-radius: 7px; padding: 9px 20px; cursor: pointer; }
+
+  .msg { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: none; }
+  .msg.error   { background: #f38ba822; color: #f38ba8; border: 1px solid #f38ba844; }
+  .msg.success { background: #a6e3a122; color: #a6e3a1; border: 1px solid #a6e3a144; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">⚙️ Dev Panel</div>
+  <div class="nav-right">
+    <div class="nav-user">Admin: <span>{{ user }}</span></div>
+    <a href="/home" class="home-link">🎬 User View</a>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="main">
+  <h1>⚙️ Movie Management</h1>
+  <p class="subtitle">Add, edit, and delete movies from the database</p>
+
+  <div class="msg" id="msg"></div>
+
+  <!-- Add Movie -->
+  <div class="add-form">
+    <h3>➕ Add New Movie</h3>
+    <div class="form-row">
+      <input type="number" id="newId"     placeholder="Movie ID">
+      <input type="text"   id="newTitle"  placeholder="Title">
+      <input type="text"   id="newGenres" placeholder="Genres (e.g. Action|Drama)">
+      <button class="btn-add" onclick="addMovie()">Add Movie</button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <div class="table-header">
+      <h3>📋 All Movies</h3>
+      <div class="pagination">
+        <button id="prevBtn" onclick="changePage(-1)" disabled>← Prev</button>
+        <span id="pageInfo">Page 1</span>
+        <button id="nextBtn" onclick="changePage(1)">Next →</button>
+        <span id="totalInfo"></span>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>ID</th><th>Title</th><th>Genres</th><th>Actions</th></tr></thead>
+      <tbody id="movieTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-bg" id="editModal">
+  <div class="modal">
+    <h3>✏️ Edit Movie</h3>
+    <input type="hidden" id="editId">
+    <input type="text" id="editTitle"  placeholder="Title">
+    <input type="text" id="editGenres" placeholder="Genres">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save"   onclick="saveEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let page = 1, totalPages = 1;
+
+  async function loadMovies() {
+    const res  = await fetch('/api/movies?page=' + page);
+    if (res.status === 401) { window.location.href = '/auth'; return; }
+    const data = await res.json();
+    totalPages = Math.ceil(data.total / 20);
+    document.getElementById('pageInfo').textContent  = 'Page ' + page + ' / ' + totalPages;
+    document.getElementById('totalInfo').textContent = data.total + ' total';
+    document.getElementById('prevBtn').disabled = page <= 1;
+    document.getElementById('nextBtn').disabled = page >= totalPages;
+    document.getElementById('movieTable').innerHTML = data.movies.map(m => `
+      <tr>
+        <td style="color:#585b70">${m.movie_id}</td>
+        <td>${m.title}</td>
+        <td>${(m.genres||'').split('|').map(g=>`<span class="genre-tag">${g}</span>`).join('')}</td>
+        <td>
+          <button class="btn-edit"   onclick="openEdit(${m.movie_id},'${m.title.replace(/'/g,"\\'")}','${(m.genres||'').replace(/'/g,"\\'")}')">Edit</button>
+          <button class="btn-delete" onclick="deleteMovie(${m.movie_id})">Delete</button>
+        </td>
+      </tr>`).join('');
+  }
+
+  function changePage(dir) { page += dir; loadMovies(); }
+
+  async function addMovie() {
+    const id     = document.getElementById('newId').value;
+    const title  = document.getElementById('newTitle').value.trim();
+    const genres = document.getElementById('newGenres').value.trim();
+    if (!id || !title) return showMsg('Movie ID and Title are required.', 'error');
+    const res  = await fetch('/api/movies', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ movie_id: parseInt(id), title, genres })
+    });
+    const data = await res.json();
+    if (!res.ok) return showMsg(data.error, 'error');
+    showMsg('✅ ' + data.message, 'success');
+    document.getElementById('newId').value = '';
+    document.getElementById('newTitle').value = '';
+    document.getElementById('newGenres').value = '';
+    loadMovies();
+  }
+
+  function openEdit(id, title, genres) {
+    document.getElementById('editId').value     = id;
+    document.getElementById('editTitle').value  = title;
+    document.getElementById('editGenres').value = genres;
+    document.getElementById('editModal').classList.add('open');
+  }
+  function closeModal() { document.getElementById('editModal').classList.remove('open'); }
+
+  async function saveEdit() {
+    const id     = document.getElementById('editId').value;
+    const title  = document.getElementById('editTitle').value.trim();
+    const genres = document.getElementById('editGenres').value.trim();
+    const res  = await fetch('/api/movies/' + id, {
+      method: 'PUT', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ title, genres })
+    });
+    const data = await res.json();
+    closeModal();
+    if (!res.ok) return showMsg(data.error, 'error');
+    showMsg('✅ ' + data.message, 'success');
+    loadMovies();
+  }
+
+  async function deleteMovie(id) {
+    if (!confirm('Delete movie #' + id + '?')) return;
+    const res  = await fetch('/api/movies/' + id, { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) return showMsg(data.error, 'error');
+    showMsg('🗑️ ' + data.message, 'success');
+    loadMovies();
+  }
+
+  function showMsg(text, type) {
+    const el = document.getElementById('msg');
+    el.textContent = text; el.className = 'msg ' + type; el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 3000);
+  }
+
+  async function logout() {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/auth';
+  }
+
+  loadMovies();
+</script>
+</body>
+</html>

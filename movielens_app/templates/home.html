@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}MovieLens — Home{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+  <div class="hero-content">
+    <h1>Discover<br>Millions of <span>Movies.</span></h1>
+
+    <form class="search-form" method="get" action="/">
+      <input name="q" value="{{ q }}" placeholder="🔍  Search by title..." autocomplete="off"/>
+      <select name="genre">
+        <option value="">All Genres</option>
+        {% for g in all_genres %}
+          <option value="{{ g }}" {% if genre == g %}selected{% endif %}>{{ g }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Search →</button>
+    </form>
+  </div>
+
+  <div class="hero-scroll">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<div class="stats-bar">
+  <div class="stat-item">
+    <div class="stat-num" data-target="{{ total }}">0</div>
+    <div class="stat-label">Movies Found</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num" data-target="{{ all_genres|length }}">0</div>
+    <div class="stat-label">Genres</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num" data-target="{{ total_pages }}">0</div>
+    <div class="stat-label">Pages</div>
+  </div>
+</div>
+
+<section class="movies-section">
+  <div class="section-header">
+    <h2>
+      {% if q or genre %}
+        Results for
+        {% if q %}"{{ q }}"{% endif %}
+        {% if genre %} · {{ genre }}{% endif %}
+        <span class="count">({{ total }} found)</span>
+      {% else %}
+        All Movies <span class="count">({{ total }} total)</span>
+      {% endif %}
+    </h2>
+  </div>
+
+  {% if movies %}
+  <div class="movie-grid">
+    {% for m in movies %}
+    <div class="movie-card" style="animation-delay:{{ loop.index0 * 0.04 }}s">
+      <div class="card-poster" data-genres="{{ m.genres | join(',') }}">
+        <div class="poster-bg"></div>
+        <div class="poster-lines"></div>
+        <div class="poster-title-overlay">{{ m.title }}</div>
+        <span class="poster-id">#{{ m.movie_id }}</span>
+        <div class="poster-overlay"><span class="play-btn">▶</span></div>
+      </div>
+      <div class="card-info">
+        <div class="card-title">{{ m.title }}</div>
+        <div class="card-genres">
+          {% for g in m.genres %}<span class="genre-tag">{{ g }}</span>{% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="pagination">
+    {% if page > 1 %}
+      <a href="/?q={{ q }}&genre={{ genre }}&page={{ page - 1 }}">← Prev</a>
+    {% endif %}
+    <span>Page {{ page }} of {{ total_pages }}</span>
+    {% if page < total_pages %}
+      <a href="/?q={{ q }}&genre={{ genre }}&page={{ page + 1 }}">Next →</a>
+    {% endif %}
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <p>😕 No movies found</p>
+    <a href="/">Clear search</a>
+  </div>
+  {% endif %}
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* ── FLOW POSTER BG ── */
+const FLOW_MOVIES = [
+  {% for m in movies %}{ title: {{ m.title | tojson }}, genres: {{ m.genres | join(',') | tojson }} },{% endfor %}
+];
+if (typeof initFlowBg === 'function' && FLOW_MOVIES.length) initFlowBg(FLOW_MOVIES);
+
+/* ── CARD POSTER GRADIENTS ── */
+const G = {
+  'Action':['#1a0a00','#8b1a00','#ff4500'],'Adventure':['#001a0a','#005c1a','#00c853'],
+  'Animation':['#0a001a','#3d0080','#aa00ff'],'Comedy':['#1a1500','#806600','#ffd600'],
+  'Crime':['#0a0a0a','#1a1a2e','#e50914'],'Drama':['#000d1a','#003366','#0066cc'],
+  'Fantasy':['#0d001a','#4a0080','#9c27b0'],'Horror':['#0a0000','#330000','#cc0000'],
+  'Musical':['#001a1a','#006666','#00bcd4'],'Mystery':['#050510','#0d0d2e','#3f51b5'],
+  'Romance':['#1a000d','#660033','#e91e63'],'Sci-Fi':['#000d1a','#001a33','#00bcd4'],
+  'Thriller':['#050505','#1a0a00','#ff6d00'],'War':['#0a0a00','#2e2e00','#827717'],
+  'Western':['#1a0d00','#5c3300','#bf6000'],'default':['#0d0d1a','#111827','#1e293b'],
+};
+document.querySelectorAll('.card-poster').forEach(el => {
+  const genres = (el.dataset.genres || '').split(',');
+  let c = G['default'];
+  for (const g of genres) { if (G[g.trim()]) { c = G[g.trim()]; break; } }
+  el.querySelector('.poster-bg').style.background =
+    `linear-gradient(160deg,${c[0]} 0%,${c[1]} 55%,${c[2]} 100%)`;
+});
+
+/* ── COUNTER ANIMATION ── */
+document.querySelectorAll('.stat-num[data-target]').forEach(el => {
+  const target = parseInt(el.dataset.target);
+  let cur = 0;
+  const step = Math.max(1, Math.ceil(target / 60));
+  const timer = setInterval(() => {
+    cur = Math.min(cur + step, target);
+    el.textContent = cur.toLocaleString();
+    if (cur >= target) clearInterval(timer);
+  }, 20);
+});
+</script>
+{% endblock %}

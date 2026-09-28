@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Admin — Upload PDFs{% endblock %}
+
+{% block content %}
+<div class="page-container">
+
+  <h2 class="page-title">⚙️ Admin Panel</h2>
+  <p class="page-subtitle">Upload PDF files to the knowledge base</p>
+
+  {% if msg %}
+    {% if '✅' in msg %}
+      <div class="alert alert-success">{{ msg }}</div>
+    {% else %}
+      <div class="alert alert-error">{{ msg }}</div>
+    {% endif %}
+  {% endif %}
+
+  <div class="upload-zone">
+    <h3>📄 Upload New PDF</h3>
+    <form method="POST" action="/admin/upload" enctype="multipart/form-data">
+      <input type="file" name="file" accept=".pdf" required class="file-input">
+      <button type="submit" class="btn-primary">Upload &amp; Index</button>
+    </form>
+  </div>
+
+  <div class="files-list">
+    <h3>📁 Indexed Files ({{ files|length }})</h3>
+    {% if files %}
+      {% for f in files %}
+        <div class="file-item">{{ f }}</div>
+      {% endfor %}
+    {% else %}
+      <p style="color:var(--text3);font-size:0.88rem;">No files uploaded yet.</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Environment
+.env
+
+# ChromaDB
+movielens_app/chroma_db/
+
+# Uploaded PDFs
+movielens_app/static/uploads/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large data files
+movielens/data/ratings.csv
+movielens/batches/

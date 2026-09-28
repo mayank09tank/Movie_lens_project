@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}MovieLens{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/style.css?v=7"/>
+</head>
+<body>
+
+<div class="bg-image"></div>
+
+<nav class="navbar">
+  <a class="brand" href="/"><span class="brand-icon">🎬</span><span class="brand-text">CINE<span class="brand-accent">LENS</span></span></a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    {% if user %}
+    <a href="/chat">💬 Chat</a>
+    {% if user['role'] == 'admin' %}
+    <a href="/admin" class="btn-admin">⚙️ Admin</a>
+    <a href="/dev" class="btn-admin" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);">🛠️ Dev</a>
+    {% endif %}
+    <span class="nav-user">👤 {{ user['name'] }}</span>
+    <form method="POST" action="/logout" style="margin:0">
+      <button type="submit" class="btn-logout">Logout</button>
+    </form>
+    {% endif %}
+  </div>
+</nav>
+
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<script src="/static/js/flow-bg.js"></script>
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

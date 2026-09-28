@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+jinja2
+python-multipart
+psycopg[binary]
+python-dotenv
+starlette
+passlib[bcrypt]
+pymupdf
+sentence-transformers
+chromadb
+ollama

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MovieLens — Search</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #11111b; color: #cdd6f4; min-height: 100vh; }
+
+  /* Navbar */
+  nav {
+    background: #1e1e2e; border-bottom: 1px solid #313244;
+    padding: 14px 32px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; color: #89b4fa; }
+  .nav-right  { display: flex; align-items: center; gap: 16px; }
+  .nav-user   { font-size: 13px; color: #a6adc8; }
+  .nav-user span { color: #cba6f7; font-weight: 600; }
+  {% if role == 'admin' %}
+  .dev-link { font-size: 13px; color: #89b4fa; text-decoration: none; padding: 6px 14px; border: 1px solid #89b4fa44; border-radius: 6px; }
+  .dev-link:hover { background: #89b4fa22; }
+  {% endif %}
+  .logout-btn {
+    background: #f38ba822; color: #f38ba8; border: 1px solid #f38ba844;
+    border-radius: 6px; padding: 6px 14px; font-size: 13px; cursor: pointer;
+  }
+  .logout-btn:hover { background: #f38ba844; }
+
+  /* Main */
+  .main { max-width: 860px; margin: 48px auto; padding: 0 20px; }
+  h1 { font-size: 28px; color: #cdd6f4; margin-bottom: 6px; }
+  .subtitle { color: #6c7086; font-size: 14px; margin-bottom: 32px; }
+
+  /* Search */
+  .search-wrap { position: relative; margin-bottom: 32px; }
+  .search-wrap input {
+    width: 100%; padding: 14px 20px 14px 48px;
+    background: #1e1e2e; border: 1px solid #45475a;
+    border-radius: 10px; color: #cdd6f4; font-size: 15px;
+  }
+  .search-wrap input:focus { outline: none; border-color: #89b4fa; }
+  .search-wrap input::placeholder { color: #585b70; }
+  .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 18px; }
+
+  /* Results */
+  .results-info { font-size: 13px; color: #6c7086; margin-bottom: 14px; }
+  .movie-card {
+    background: #1e1e2e; border: 1px solid #313244;
+    border-radius: 10px; padding: 16px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px; transition: border .2s;
+  }
+  .movie-card:hover { border-color: #89b4fa44; }
+  .movie-id   { font-size: 12px; color: #585b70; min-width: 60px; }
+  .movie-title { font-size: 15px; color: #cdd6f4; flex: 1; margin: 0 16px; }
+  .movie-genres { font-size: 12px; color: #6c7086; }
+  .genre-tag {
+    display: inline-block; background: #313244; color: #89b4fa;
+    border-radius: 4px; padding: 2px 8px; font-size: 11px; margin: 2px 2px 0 0;
+  }
+  .empty { text-align: center; color: #45475a; padding: 60px 0; font-size: 15px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">🎬 MovieLens DB</div>
+  <div class="nav-right">
+    <div class="nav-user">Welcome, <span>{{ user }}</span></div>
+    {% if role == 'admin' %}
+    <a href="/dev" class="dev-link">⚙️ Dev Panel</a>
+    {% endif %}
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="main">
+  <h1>🎬 Movie Search</h1>
+  <p class="subtitle">Search from the MovieLens database</p>
+
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search movies by title..." oninput="search(this.value)">
+  </div>
+
+  <div class="results-info" id="resultsInfo"></div>
+  <div id="results"><div class="empty">Start typing to search movies...</div></div>
+</div>
+
+<script>
+  let timer;
+  function search(q) {
+    clearTimeout(timer);
+    if (!q.trim()) {
+      document.getElementById('results').innerHTML = '<div class="empty">Start typing to search movies...</div>';
+      document.getElementById('resultsInfo').textContent = '';
+      return;
+    }
+    timer = setTimeout(async () => {
+      const res  = await fetch('/api/movies/search?q=' + encodeURIComponent(q));
+      if (res.status === 401) { window.location.href = '/auth'; return; }
+      const data = await res.json();
+      document.getElementById('resultsInfo').textContent = data.length + ' result(s) found';
+      if (!data.length) {
+        document.getElementById('results').innerHTML = '<div class="empty">No movies found for "' + q + '"</div>';
+        return;
+      }
+      document.getElementById('results').innerHTML = data.map(m => `
+        <div class="movie-card">
+          <div class="movie-id">#${m.movie_id}</div>
+          <div class="movie-title">${m.title}</div>
+          <div class="movie-genres">${(m.genres||'').split('|').map(g => `<span class="genre-tag">${g}</span>`).join('')}</div>
+        </div>`).join('');
+    }, 300);
+  }
+
+  async function logout() {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/auth';
+  }
+</script>
+</body>
+</html>
